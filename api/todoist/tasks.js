@@ -23,34 +23,50 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const todoistRes = await fetch("https://api.todoist.com/rest/v2/tasks", {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const endpoints = [
+            "https://api.todoist.com/rest/v2/tasks",
+            "https://api.todoist.com/api/v1/tasks",
+            "https://api.todoist.com/rest/v1/tasks",
+        ];
 
-        const text = await todoistRes.text();
-        let data = [];
-        if (text) {
-            try {
-                data = JSON.parse(text);
-            } catch {
-                data = null;
+        let lastStatus = 500;
+        let lastError = "Todoist request failed.";
+
+        for (const url of endpoints) {
+            const todoistRes = await fetch(url, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const text = await todoistRes.text();
+            let data = [];
+            if (text) {
+                try {
+                    data = JSON.parse(text);
+                } catch {
+                    data = null;
+                }
+            }
+
+            if (todoistRes.ok) {
+                res.status(200).json(Array.isArray(data) ? data : []);
+                return;
+            }
+
+            lastStatus = todoistRes.status;
+            lastError =
+                data && data.error
+                    ? `Todoist: ${data.error}`
+                    : `Todoist request failed (${todoistRes.status}) on ${url}.`;
+
+            if (![404, 410].includes(todoistRes.status)) {
+                break;
             }
         }
 
-        if (!todoistRes.ok) {
-            res.status(todoistRes.status).json({
-                error:
-                    data && data.error
-                        ? `Todoist: ${data.error}`
-                        : `Todoist request failed (${todoistRes.status}).`,
-            });
-            return;
-        }
-
-        res.status(200).json(Array.isArray(data) ? data : []);
+        res.status(lastStatus).json({ error: lastError });
     } catch (err) {
         res.status(500).json({ error: err.message || "Server error while loading tasks." });
     }

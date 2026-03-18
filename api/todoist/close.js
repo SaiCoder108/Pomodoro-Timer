@@ -43,14 +43,28 @@ module.exports = async (req, res) => {
     }
 
     try {
-        const todoistRes = await fetch(`https://api.todoist.com/rest/v2/tasks/${taskId}/close`, {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
+        const endpoints = [
+            `https://api.todoist.com/rest/v2/tasks/${taskId}/close`,
+            `https://api.todoist.com/api/v1/tasks/${taskId}/close`,
+            `https://api.todoist.com/rest/v1/tasks/${taskId}/close`,
+        ];
 
-        if (!todoistRes.ok) {
+        let lastStatus = 500;
+        let lastError = "Todoist close failed.";
+
+        for (const url of endpoints) {
+            const todoistRes = await fetch(url, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (todoistRes.ok) {
+                res.status(200).json({ ok: true });
+                return;
+            }
+
             const text = await todoistRes.text();
             let parsed = null;
             try {
@@ -59,16 +73,18 @@ module.exports = async (req, res) => {
                 parsed = null;
             }
 
-            res.status(todoistRes.status).json({
-                error:
-                    parsed && parsed.error
-                        ? `Todoist: ${parsed.error}`
-                        : `Todoist close failed (${todoistRes.status}).`,
-            });
-            return;
+            lastStatus = todoistRes.status;
+            lastError =
+                parsed && parsed.error
+                    ? `Todoist: ${parsed.error}`
+                    : `Todoist close failed (${todoistRes.status}) on ${url}.`;
+
+            if (![404, 410].includes(todoistRes.status)) {
+                break;
+            }
         }
 
-        res.status(200).json({ ok: true });
+        res.status(lastStatus).json({ error: lastError });
     } catch (err) {
         res.status(500).json({ error: err.message || "Server error while closing task." });
     }
