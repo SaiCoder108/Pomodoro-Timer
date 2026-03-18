@@ -218,7 +218,6 @@
                     workMinutes: 25,
                     restMinutes: 5,
                     autoStartNext: false,
-                    todoToken: "",
                 })
             );
 
@@ -230,10 +229,9 @@
             const [clockNow, setClockNow] = useState(new Date());
             const [untilMidnightSec, setUntilMidnightSec] = useState(midnightSeconds());
 
-            const [taskLoading, setTaskLoading] = useState(false);
             const [taskError, setTaskError] = useState("");
-            const [tasks, setTasks] = useState([]);
-            const [lastSyncedAt, setLastSyncedAt] = useState("");
+            const [taskInput, setTaskInput] = useState("");
+            const [tasks, setTasks] = useState(() => loadState("pp_manual_tasks", []));
             const [breakIdea, setBreakIdea] = useState("Take a short walk outside.");
 
             const [history, setHistory] = useState(() => loadState("pp_history", {}));
@@ -253,6 +251,10 @@
             useEffect(() => {
                 saveState("pp_history", history);
             }, [history]);
+
+            useEffect(() => {
+                saveState("pp_manual_tasks", tasks);
+            }, [tasks]);
 
             useEffect(() => {
                 const timer = setInterval(() => {
@@ -319,85 +321,43 @@
                 setBreakIdea(random);
             }
 
-            async function fetchTasks() {
-                if (!settings.todoToken.trim()) {
-                    setTaskError("Please enter your Todoist API token.");
-                    setTasks([]);
+            function importTasksFromText() {
+                if (!taskInput.trim()) {
+                    setTaskError("Paste your task list first.");
                     return;
                 }
 
                 setTaskError("");
-                setTaskLoading(true);
-                try {
-                    const token = settings.todoToken.trim();
-                    const res = await fetch("https://api.todoist.com/rest/v2/tasks?filter=today", {
-                        method: "GET",
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
+                const normalized = taskInput
+                    .split(/\r?\n|,/)
+                    .map((line) => line.replace(/^\s*([-*]|\d+[.)])\s*/, "").trim())
+                    .filter(Boolean);
 
-                    if (!res.ok) {
-                        if (res.status === 401 || res.status === 403) {
-                            throw new Error("Invalid Todoist token. Please check and try again.");
-                        }
-                        throw new Error(`Todoist request failed (${res.status}).`);
-                    }
-
-                    const data = await res.json();
-                    const incompleteTasks = Array.isArray(data)
-                        ? data.filter((task) => task && task.is_completed !== true)
-                        : [];
-                    setTasks(incompleteTasks);
-                    setLastSyncedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-                } catch (err) {
-                    const isNetworkError = err && err.name === "TypeError";
-                    setTaskError(
-                        isNetworkError
-                            ? "Network error. Could not reach Todoist API from your browser."
-                            : (err.message || "Could not load tasks.")
-                    );
-                } finally {
-                    setTaskLoading(false);
+                if (normalized.length === 0) {
+                    setTaskError("No valid task lines found. Paste one task per line.");
+                    return;
                 }
+
+                const imported = normalized.map((content) => ({
+                    id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+                    content,
+                    done: false,
+                }));
+
+                setTasks((prev) => [...prev, ...imported]);
+                setTaskInput("");
             }
 
-            useEffect(() => {
-                if (!settings.todoToken.trim()) return;
-                fetchTasks();
-            }, []);
+            function toggleTaskDone(taskId) {
+                setTasks((prev) =>
+                    prev.map((task) =>
+                        task.id === taskId ? { ...task, done: !task.done } : task
+                    )
+                );
+            }
 
-            async function completeTask(taskId) {
-                try {
-                    const token = settings.todoToken.trim();
-                    if (!token) {
-                        setTaskError("Please enter your Todoist API token.");
-                        return;
-                    }
-
-                    const res = await fetch(`https://api.todoist.com/rest/v2/tasks/${taskId}/close`, {
-                        method: "POST",
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-
-                    if (!res.ok) {
-                        if (res.status === 401 || res.status === 403) {
-                            throw new Error("Invalid Todoist token. Could not complete task.");
-                        }
-                        throw new Error(`Close failed (${res.status}).`);
-                    }
-
-                    setTasks((prev) => prev.filter((t) => t.id !== taskId));
-                } catch (err) {
-                    const isNetworkError = err && err.name === "TypeError";
-                    setTaskError(
-                        isNetworkError
-                            ? "Network error while completing the task."
-                            : (err.message || "Could not close task.")
-                    );
-                }
+            function clearCompletedTasks() {
+                setTasks((prev) => prev.filter((task) => !task.done));
             }
 
             const recentDays = useMemo(() => {
@@ -586,52 +546,54 @@
                                     <section className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft">
                                         <div className="mb-4 flex items-center justify-between">
                                             <div>
-                                                <h2 className="text-lg font-semibold">Today Tasks</h2>
-                                                <p className="text-xs text-muted">Todoist window inside Pomodoro</p>
+                                                <h2 className="text-lg font-semibold">Task Import</h2>
+                                                <p className="text-xs text-muted">Paste a list to auto-create tasks</p>
                                             </div>
                                             <button
-                                                onClick={fetchTasks}
+                                                onClick={importTasksFromText}
                                                 className="rounded-xl bg-accent px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-110"
                                             >
-                                                {taskLoading ? "Syncing..." : "Sync"}
+                                                Import
                                             </button>
                                         </div>
 
-                                        <label className="mb-2 block text-sm text-muted">Todoist API Token</label>
-                                        <input
-                                            type="password"
-                                            value={settings.todoToken}
-                                            onChange={(e) => setSettings((s) => ({ ...s, todoToken: e.target.value }))}
-                                            placeholder="Paste your Todoist token"
-                                            className="mb-3 w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
+                                        <label className="mb-2 block text-sm text-muted">Paste Tasks</label>
+                                        <textarea
+                                            value={taskInput}
+                                            onChange={(e) => setTaskInput(e.target.value)}
+                                            placeholder={"Example:\n- Finish report\n- Send update\n- Read chapter 4"}
+                                            className="mb-3 min-h-[110px] w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
                                         />
-                                        <p className="mb-3 text-xs text-muted">Tasks are fetched directly from Todoist using the token you enter.</p>
+                                        <p className="mb-3 text-xs text-muted">One line becomes one task. Bullets and numbering are auto-cleaned.</p>
 
                                         <div className="mb-3 flex items-center justify-between rounded-xl border border-line bg-card px-3 py-2 text-xs">
-                                            <span className="text-muted">{tasks.length} task{tasks.length === 1 ? "" : "s"} due today</span>
-                                            <span className="text-muted">{lastSyncedAt ? `Synced ${lastSyncedAt}` : "Not synced yet"}</span>
+                                            <span className="text-muted">{tasks.length} task{tasks.length === 1 ? "" : "s"} total</span>
+                                            <button
+                                                onClick={clearCompletedTasks}
+                                                className="rounded-md border border-line px-2 py-1 font-semibold text-muted transition hover:bg-bg"
+                                            >
+                                                Clear done
+                                            </button>
                                         </div>
 
-                                        {taskLoading && <p className="text-sm text-muted">Loading tasks...</p>}
                                         {taskError && <p className="text-sm text-red-500">{taskError}</p>}
 
                                         <ul className="max-h-64 space-y-2 overflow-auto pr-1">
-                                            {tasks.length === 0 && !taskLoading && (
+                                            {tasks.length === 0 && (
                                                 <li className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">
-                                                    No incomplete tasks due today.
+                                                    No tasks yet. Paste a list and click Import.
                                                 </li>
                                             )}
                                             {tasks.map((task) => (
                                                 <li key={task.id} className="flex items-start justify-between gap-2 rounded-xl border border-line bg-card p-3">
                                                     <div>
-                                                        <p className="text-sm font-medium">{task.content}</p>
-                                                        {task.description && <p className="mt-1 text-xs text-muted">{task.description}</p>}
+                                                        <p className={`text-sm font-medium ${task.done ? "text-muted line-through" : ""}`}>{task.content}</p>
                                                     </div>
                                                     <button
-                                                        onClick={() => completeTask(task.id)}
+                                                        onClick={() => toggleTaskDone(task.id)}
                                                         className="rounded-lg border border-line px-2 py-1 text-xs font-semibold transition hover:bg-bg"
                                                     >
-                                                        Done
+                                                        {task.done ? "Undo" : "Done"}
                                                     </button>
                                                 </li>
                                             ))}
