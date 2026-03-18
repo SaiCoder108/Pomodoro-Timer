@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pastel Pomodoro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ["Manrope", "sans-serif"],
+                        serif: ["Newsreader", "serif"],
+                    },
+                    colors: {
+                        bg: "rgb(var(--bg) / <alpha-value>)",
+                        panel: "rgb(var(--panel) / <alpha-value>)",
+                        card: "rgb(var(--card) / <alpha-value>)",
+                        text: "rgb(var(--text) / <alpha-value>)",
+                        muted: "rgb(var(--muted) / <alpha-value>)",
+                        line: "rgb(var(--line) / <alpha-value>)",
+                        accent: "rgb(var(--accent) / <alpha-value>)",
+                        accent2: "rgb(var(--accent2) / <alpha-value>)",
+                        ok: "rgb(var(--ok) / <alpha-value>)",
+                    },
+                    boxShadow: {
+                        soft: "0 20px 55px -30px rgba(28, 34, 71, 0.45)",
+                    },
+                    keyframes: {
+                        drift: {
+                            "0%, 100%": { transform: "translate3d(0,0,0) scale(1)" },
+                            "50%": { transform: "translate3d(8px,-12px,0) scale(1.03)" },
+                        },
+                        rise: {
+                            from: { opacity: "0", transform: "translateY(16px)" },
+                            to: { opacity: "1", transform: "translateY(0)" },
+                        },
+                    },
+                    animation: {
+                        drift: "drift 8s ease-in-out infinite",
+                        rise: "rise 450ms ease both",
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        :root {
+            --bg: 244 247 255;
+            --panel: 255 255 255;
+            --card: 255 255 255;
+            --text: 44 51 76;
+            --muted: 109 118 145;
+            --line: 223 229 247;
+            --accent: 120 161 255;
+            --accent2: 255 175 188;
+            --ok: 125 188 145;
+        }
+
+        .dark {
+            --bg: 21 23 34;
+            --panel: 33 36 51;
+            --card: 38 42 59;
+            --text: 236 240 255;
+            --muted: 168 177 208;
+            --line: 68 73 101;
+            --accent: 150 191 255;
+            --accent2: 255 185 197;
+            --ok: 161 220 180;
+        }
+
+        body {
+            font-family: "Manrope", sans-serif;
+        }
+
+        .surface {
+            background:
+                radial-gradient(circle at 15% 10%, rgba(120, 161, 255, 0.16), transparent 35%),
+                radial-gradient(circle at 80% 12%, rgba(255, 175, 188, 0.2), transparent 38%),
+                radial-gradient(circle at 50% 95%, rgba(125, 188, 145, 0.14), transparent 42%),
+                rgb(var(--bg));
+        }
+
+        .glass {
+            backdrop-filter: blur(12px);
+        }
+
+        .progress-track {
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .fade-in {
+            animation: rise 420ms ease both;
+        }
+    </style>
+</head>
+
+<body class="h-full bg-bg text-text surface transition-colors duration-500">
+    <div id="root" class="min-h-full"></div>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useEffect, useMemo, useState } = React;
+
+        const PRESETS = [
+            { label: "25/5", work: 25, rest: 5 },
+            { label: "50/10", work: 50, rest: 10 },
+            { label: "45/15", work: 45, rest: 15 },
+        ];
+
+        const BREAK_IDEAS = [
+            "Take a short walk outside.",
+            "Do 10 gentle stretches.",
+            "Drink a full glass of water.",
+            "Play 2 minutes of piano.",
+            "Do a quick breathing reset: 4-4-6.",
+            "Step away from screens and look far away for 60 seconds.",
+            "Write one line in a journal.",
+            "Tidy your desk for 2 minutes.",
+            "Listen to one calming song.",
+            "Do 15 bodyweight squats.",
+            "Call or text a friend briefly.",
+            "Make tea and sip slowly.",
+        ];
+
+        function loadState(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) return fallback;
+                return JSON.parse(raw);
+            } catch {
+                return fallback;
+            }
+        }
+
+        function saveState(key, value) {
+            localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function formatTime(totalSec) {
+            const safe = Math.max(0, totalSec);
+            const mins = Math.floor(safe / 60)
+                .toString()
+                .padStart(2, "0");
+            const secs = Math.floor(safe % 60)
+                .toString()
+                .padStart(2, "0");
+            return `${mins}:${secs}`;
+        }
+
+        function formatHMS(totalSec) {
+            const safe = Math.max(0, totalSec);
+            const hours = Math.floor(safe / 3600)
+                .toString()
+                .padStart(2, "0");
+            const mins = Math.floor((safe % 3600) / 60)
+                .toString()
+                .padStart(2, "0");
+            const secs = Math.floor(safe % 60)
+                .toString()
+                .padStart(2, "0");
+            return `${hours}:${mins}:${secs}`;
+        }
+
+        function formatClock(date) {
+            return new Intl.DateTimeFormat(undefined, {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            }).format(date);
+        }
+
+        function formatDateKey(date) {
+            return date.toISOString().slice(0, 10);
+        }
+
+        function midnightSeconds() {
+            const now = new Date();
+            const next = new Date(now);
+            next.setHours(24, 0, 0, 0);
+            return Math.floor((next - now) / 1000);
+        }
+
+        function playSoftBeep() {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+            const ctx = new AudioCtx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.value = 690;
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.07, ctx.currentTime + 0.04);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.38);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        }
+
+        function App() {
+            const [theme, setTheme] = useState(() => loadState("pp_theme", "light"));
+            const [mode, setMode] = useState("pomodoro");
+
+            const [settings, setSettings] = useState(() =>
+                loadState("pp_settings", {
+                    workMinutes: 25,
+                    restMinutes: 5,
+                    autoStartNext: false,
+                    todoToken: "",
+                })
+            );
+
+            const [phase, setPhase] = useState("work");
+            const [isRunning, setIsRunning] = useState(false);
+            const [durationSec, setDurationSec] = useState(settings.workMinutes * 60);
+            const [remainingSec, setRemainingSec] = useState(settings.workMinutes * 60);
+
+            const [clockNow, setClockNow] = useState(new Date());
+            const [untilMidnightSec, setUntilMidnightSec] = useState(midnightSeconds());
+
+            const [taskLoading, setTaskLoading] = useState(false);
+            const [taskError, setTaskError] = useState("");
+            const [tasks, setTasks] = useState([]);
+            const [breakIdea, setBreakIdea] = useState("Take a short walk outside.");
+
+            const [history, setHistory] = useState(() => loadState("pp_history", {}));
+
+            const todayKey = formatDateKey(new Date());
+            const completedToday = history[todayKey] || 0;
+
+            useEffect(() => {
+                document.documentElement.classList.toggle("dark", theme === "dark");
+                saveState("pp_theme", theme);
+            }, [theme]);
+
+            useEffect(() => {
+                saveState("pp_settings", settings);
+            }, [settings]);
+
+            useEffect(() => {
+                saveState("pp_history", history);
+            }, [history]);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    setClockNow(new Date());
+                    setUntilMidnightSec(midnightSeconds());
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            useEffect(() => {
+                if (!isRunning || mode !== "pomodoro") return;
+                const timer = setInterval(() => {
+                    setRemainingSec((prev) => {
+                        if (prev > 1) return prev - 1;
+                        playSoftBeep();
+                        if (phase === "work") {
+                            const key = formatDateKey(new Date());
+                            setHistory((h) => ({ ...h, [key]: (h[key] || 0) + 1 }));
+                        }
+
+                        const nextPhase = phase === "work" ? "rest" : "work";
+                        const nextDuration =
+                            nextPhase === "work"
+                                ? Math.max(1, settings.workMinutes) * 60
+                                : Math.max(1, settings.restMinutes) * 60;
+
+                        setPhase(nextPhase);
+                        setDurationSec(nextDuration);
+                        if (!settings.autoStartNext) {
+                            setIsRunning(false);
+                        }
+                        return nextDuration;
+                    });
+                }, 1000);
+
+                return () => clearInterval(timer);
+            }, [isRunning, phase, settings.workMinutes, settings.restMinutes, settings.autoStartNext, mode]);
+
+            function applyPreset(work, rest) {
+                const safeWork = Math.max(1, Number(work) || 25);
+                const safeRest = Math.max(1, Number(rest) || 5);
+                setSettings((s) => ({ ...s, workMinutes: safeWork, restMinutes: safeRest }));
+                if (phase === "work") {
+                    setDurationSec(safeWork * 60);
+                    setRemainingSec(safeWork * 60);
+                } else {
+                    setDurationSec(safeRest * 60);
+                    setRemainingSec(safeRest * 60);
+                }
+                setIsRunning(false);
+            }
+
+            function resetTimer() {
+                const d = phase === "work" ? settings.workMinutes * 60 : settings.restMinutes * 60;
+                setDurationSec(d);
+                setRemainingSec(d);
+                setIsRunning(false);
+            }
+
+            function pickRandomBreak() {
+                const options = BREAK_IDEAS.filter((idea) => idea !== breakIdea);
+                const pool = options.length > 0 ? options : BREAK_IDEAS;
+                const random = pool[Math.floor(Math.random() * pool.length)];
+                setBreakIdea(random);
+            }
+
+            async function fetchTasks() {
+                if (!settings.todoToken.trim()) {
+                    setTaskError("Add a Todoist API token in settings first.");
+                    return;
+                }
+
+                setTaskError("");
+                setTaskLoading(true);
+                try {
+                    const res = await fetch("https://api.todoist.com/rest/v2/tasks", {
+                        headers: {
+                            Authorization: `Bearer ${settings.todoToken.trim()}`,
+                        },
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`Todoist request failed (${res.status}).`);
+                    }
+
+                    const data = await res.json();
+                    setTasks(data);
+                } catch (err) {
+                    setTaskError(err.message || "Could not load tasks.");
+                } finally {
+                    setTaskLoading(false);
+                }
+            }
+
+            async function completeTask(taskId) {
+                if (!settings.todoToken.trim()) return;
+                try {
+                    const res = await fetch(`https://api.todoist.com/rest/v2/tasks/${taskId}/close`, {
+                        method: "POST",
+                        headers: {
+                            Authorization: `Bearer ${settings.todoToken.trim()}`,
+                        },
+                    });
+
+                    if (!res.ok) {
+                        throw new Error(`Close failed (${res.status}).`);
+                    }
+
+                    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+                } catch (err) {
+                    setTaskError(err.message || "Could not close task.");
+                }
+            }
+
+            const recentDays = useMemo(() => {
+                const now = new Date();
+                const startOfWeek = new Date(now);
+                startOfWeek.setHours(0, 0, 0, 0);
+                startOfWeek.setDate(now.getDate() - now.getDay());
+
+                return Array.from({ length: 7 }, (_, i) => {
+                    const d = new Date(startOfWeek);
+                    d.setDate(startOfWeek.getDate() + i);
+                    const key = formatDateKey(d);
+                    return {
+                        key,
+                        label: d.toLocaleDateString(undefined, { weekday: "short" }),
+                        count: history[key] || 0,
+                    };
+                });
+            }, [history]);
+
+            const maxDay = Math.max(1, ...recentDays.map((d) => d.count));
+            const progress = durationSec === 0 ? 0 : (durationSec - remainingSec) / durationSec;
+
+            return (
+                <main className="relative min-h-screen px-4 py-6 sm:px-8 sm:py-10">
+                    <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        <div className="absolute -left-8 top-20 h-40 w-40 rounded-full bg-accent/30 blur-2xl animate-drift" />
+                        <div className="absolute right-2 top-1/3 h-44 w-44 rounded-full bg-accent2/35 blur-2xl animate-drift" />
+                        <div className="absolute bottom-8 left-1/2 h-40 w-40 -translate-x-1/2 rounded-full bg-ok/30 blur-2xl animate-drift" />
+                    </div>
+
+                    <div className="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
+                        <header className="glass grid grid-cols-1 items-center gap-3 rounded-3xl border border-line/70 bg-panel/80 p-4 shadow-soft sm:grid-cols-[1fr_auto_1fr] sm:p-6">
+                            <div className="text-center sm:text-left">
+                                <p className="font-serif text-2xl leading-tight sm:text-3xl">Pastel Pomodoro</p>
+                                <p className="text-sm text-muted">focus, breathe, and flow</p>
+                            </div>
+
+                            <div className="mx-auto flex w-fit items-center gap-2 rounded-2xl border border-line bg-card p-1 sm:mx-0 sm:justify-self-center">
+                                {["pomodoro", "clock", "midnight", "progress"].map((m) => (
+                                    <button
+                                        key={m}
+                                        onClick={() => setMode(m)}
+                                        className={`rounded-xl px-3 py-2 text-sm font-medium transition sm:px-4 ${mode === m
+                                            ? "bg-accent text-white shadow"
+                                            : "text-muted hover:bg-bg hover:text-text"
+                                            }`}
+                                    >
+                                        {m === "pomodoro" ? "Pomodoro" : m === "clock" ? "Live Clock" : m === "midnight" ? "Next Day" : "Progress"}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
+                                className="mx-auto rounded-xl border border-line bg-card px-4 py-2 text-sm font-medium text-text transition hover:scale-[1.03] sm:mx-0 sm:justify-self-end"
+                            >
+                                {theme === "light" ? "Dark Mode" : "Light Mode"}
+                            </button>
+                        </header>
+
+                        {mode === "pomodoro" && (
+                            <section className="grid gap-4 lg:grid-cols-[1.55fr_1fr]">
+                                <article className="fade-in glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft sm:p-7">
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="text-sm uppercase tracking-wide text-muted">Current Session</p>
+                                                <p className="text-xl font-semibold sm:text-2xl">
+                                                    {phase === "work" ? "Work Session" : "Break Session"}
+                                                </p>
+                                            </div>
+                                            <span className="rounded-full border border-line bg-card px-3 py-1 text-xs text-muted">
+                                                Today: {completedToday} complete
+                                            </span>
+                                        </div>
+
+                                        <div className="mx-auto grid max-w-lg place-items-center">
+                                            <div className="relative h-72 w-72 sm:h-80 sm:w-80">
+                                                <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
+                                                    <circle cx="90" cy="90" r="72" stroke="currentColor" strokeWidth="12" className="text-line" fill="none" />
+                                                    <circle
+                                                        cx="90"
+                                                        cy="90"
+                                                        r="72"
+                                                        stroke="url(#timerGradient)"
+                                                        strokeWidth="12"
+                                                        strokeLinecap="round"
+                                                        className="progress-track"
+                                                        strokeDasharray={2 * Math.PI * 72}
+                                                        strokeDashoffset={(2 * Math.PI * 72) * (1 - progress)}
+                                                        fill="none"
+                                                    />
+                                                    <defs>
+                                                        <linearGradient id="timerGradient" x1="0%" x2="100%" y1="0%" y2="0%">
+                                                            <stop offset="0%" stopColor="rgb(var(--accent))" />
+                                                            <stop offset="100%" stopColor="rgb(var(--accent2))" />
+                                                        </linearGradient>
+                                                    </defs>
+                                                </svg>
+                                                <div className="absolute inset-0 flex items-center justify-center text-center">
+                                                    <div>
+                                                        <p className="text-5xl font-semibold tracking-tight sm:text-6xl">{formatTime(remainingSec)}</p>
+                                                        <p className="mt-2 text-sm text-muted">{phase === "work" ? "Stay centered" : "Reset and breathe"}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex flex-wrap justify-center gap-2">
+                                            {PRESETS.map((p) => (
+                                                <button
+                                                    key={p.label}
+                                                    onClick={() => applyPreset(p.work, p.rest)}
+                                                    className="rounded-xl border border-line bg-card px-3 py-2 text-sm transition hover:-translate-y-0.5 hover:shadow"
+                                                >
+                                                    {p.label}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex flex-wrap justify-center gap-2">
+                                            <button
+                                                onClick={() => setIsRunning((r) => !r)}
+                                                className="rounded-xl bg-accent px-5 py-2.5 font-semibold text-white transition hover:brightness-110"
+                                            >
+                                                {isRunning ? "Pause" : "Start"}
+                                            </button>
+                                            <button
+                                                onClick={resetTimer}
+                                                className="rounded-xl border border-line bg-card px-5 py-2.5 font-semibold text-text transition hover:bg-bg"
+                                            >
+                                                Reset
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    const next = phase === "work" ? "rest" : "work";
+                                                    setPhase(next);
+                                                    const d = next === "work" ? settings.workMinutes * 60 : settings.restMinutes * 60;
+                                                    setDurationSec(d);
+                                                    setRemainingSec(d);
+                                                    setIsRunning(false);
+                                                }}
+                                                className="rounded-xl border border-line bg-card px-5 py-2.5 font-semibold text-text transition hover:bg-bg"
+                                            >
+                                                Skip
+                                            </button>
+                                        </div>
+
+                                        {phase === "rest" && (
+                                            <div className="rounded-2xl border border-line bg-card p-4">
+                                                <div className="mb-2 flex items-center justify-between gap-2">
+                                                    <p className="text-sm font-semibold">Random Break Generator</p>
+                                                    <button
+                                                        onClick={pickRandomBreak}
+                                                        className="rounded-lg border border-line px-3 py-1.5 text-xs font-semibold transition hover:bg-bg"
+                                                    >
+                                                        New Idea
+                                                    </button>
+                                                </div>
+                                                <p className="text-sm text-muted">{breakIdea}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </article>
+
+                                <aside className="space-y-4 sm:space-y-5">
+                                    <section className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft">
+                                        <div className="mb-4 flex items-center justify-between">
+                                            <h2 className="text-lg font-semibold">Todoist Tasks</h2>
+                                            <button
+                                                onClick={fetchTasks}
+                                                className="rounded-xl bg-accent px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-110"
+                                            >
+                                                Sync
+                                            </button>
+                                        </div>
+
+                                        <label className="mb-2 block text-sm text-muted">Todoist API Token</label>
+                                        <input
+                                            type="password"
+                                            value={settings.todoToken}
+                                            onChange={(e) => setSettings((s) => ({ ...s, todoToken: e.target.value }))}
+                                            placeholder="Paste personal token"
+                                            className="mb-3 w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
+                                        />
+
+                                        {taskLoading && <p className="text-sm text-muted">Loading tasks...</p>}
+                                        {taskError && <p className="text-sm text-red-500">{taskError}</p>}
+
+                                        <ul className="max-h-64 space-y-2 overflow-auto pr-1">
+                                            {tasks.length === 0 && !taskLoading && (
+                                                <li className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">
+                                                    No tasks loaded yet.
+                                                </li>
+                                            )}
+                                            {tasks.map((task) => (
+                                                <li key={task.id} className="flex items-start justify-between gap-2 rounded-xl border border-line bg-card p-3">
+                                                    <div>
+                                                        <p className="text-sm font-medium">{task.content}</p>
+                                                        {task.description && <p className="mt-1 text-xs text-muted">{task.description}</p>}
+                                                    </div>
+                                                    <button
+                                                        onClick={() => completeTask(task.id)}
+                                                        className="rounded-lg border border-line px-2 py-1 text-xs font-semibold transition hover:bg-bg"
+                                                    >
+                                                        Done
+                                                    </button>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </section>
+
+                                    <details className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft">
+                                        <summary className="cursor-pointer list-none text-lg font-semibold">More Controls</summary>
+
+                                        <div className="mt-4 space-y-5">
+                                            <section>
+                                                <div className="mb-4 flex items-center justify-between">
+                                                    <h2 className="text-base font-semibold">Settings</h2>
+                                                    <span className="text-xs text-muted">saved locally</span>
+                                                </div>
+
+                                                <div className="space-y-3">
+                                                    <label className="block text-sm text-muted">Work Minutes</label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={settings.workMinutes}
+                                                        onChange={(e) =>
+                                                            setSettings((s) => ({ ...s, workMinutes: Math.max(1, Number(e.target.value) || 1) }))
+                                                        }
+                                                        className="w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
+                                                    />
+
+                                                    <label className="block text-sm text-muted">Rest Minutes</label>
+                                                    <input
+                                                        type="number"
+                                                        min="1"
+                                                        value={settings.restMinutes}
+                                                        onChange={(e) =>
+                                                            setSettings((s) => ({ ...s, restMinutes: Math.max(1, Number(e.target.value) || 1) }))
+                                                        }
+                                                        className="w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
+                                                    />
+
+                                                    <button
+                                                        onClick={() => {
+                                                            const d = phase === "work" ? settings.workMinutes * 60 : settings.restMinutes * 60;
+                                                            setDurationSec(d);
+                                                            setRemainingSec(d);
+                                                            setIsRunning(false);
+                                                        }}
+                                                        className="w-full rounded-xl border border-line bg-card px-3 py-2 text-sm font-medium transition hover:bg-bg"
+                                                    >
+                                                        Apply Durations
+                                                    </button>
+
+                                                    <label className="mt-2 flex items-center gap-2 text-sm">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={settings.autoStartNext}
+                                                            onChange={(e) => setSettings((s) => ({ ...s, autoStartNext: e.target.checked }))}
+                                                            className="h-4 w-4 rounded border-line"
+                                                        />
+                                                        Auto-start next session
+                                                    </label>
+                                                </div>
+                                            </section>
+                                        </div>
+                                    </details>
+                                </aside>
+                            </section>
+                        )}
+
+                        {mode === "progress" && (
+                            <article className="fade-in glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft sm:p-7">
+                                <div className="mx-auto w-full max-w-2xl">
+                                    <div className="mb-6 text-center">
+                                        <p className="text-sm uppercase tracking-widest text-muted">Progress</p>
+                                        <p className="mt-1 font-serif text-3xl sm:text-4xl">Your Focus Streak</p>
+                                        <p className="mt-2 text-sm text-muted">Today completed: {completedToday} sessions</p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                        {recentDays.map((day) => (
+                                            <div key={day.key} className="grid grid-cols-[56px_1fr_32px] items-center gap-3 text-sm">
+                                                <span className="text-muted">{day.label}</span>
+                                                <div className="h-3 overflow-hidden rounded-full bg-line">
+                                                    <div
+                                                        className="h-full rounded-full bg-gradient-to-r from-ok to-accent transition-all duration-700"
+                                                        style={{ width: `${(day.count / maxDay) * 100}%` }}
+                                                    />
+                                                </div>
+                                                <span className="text-right font-semibold">{day.count}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </article>
+                        )}
+
+                        {mode === "clock" && (
+                            <article className="fade-in glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft sm:p-7">
+                                <div className="grid min-h-[420px] place-items-center text-center">
+                                    <div className="space-y-4">
+                                        <p className="text-sm uppercase tracking-widest text-muted">Live Clock Mode</p>
+                                        <p className="font-serif text-5xl sm:text-7xl">{formatClock(clockNow)}</p>
+                                        <p className="text-muted">{clockNow.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
+                                    </div>
+                                </div>
+                            </article>
+                        )}
+
+                        {mode === "midnight" && (
+                            <article className="fade-in glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft sm:p-7">
+                                <div className="grid min-h-[420px] place-items-center text-center">
+                                    <div className="w-full max-w-lg space-y-6">
+                                        <p className="text-sm uppercase tracking-widest text-muted">Countdown To Midnight</p>
+                                        <p className="font-serif text-5xl sm:text-7xl">{formatHMS(untilMidnightSec)}</p>
+                                        <div className="h-3 overflow-hidden rounded-full bg-line">
+                                            <div
+                                                className="h-full rounded-full bg-gradient-to-r from-accent to-accent2 transition-all duration-1000"
+                                                style={{ width: `${((86400 - untilMidnightSec) / 86400) * 100}%` }}
+                                            />
+                                        </div>
+                                        <p className="text-sm text-muted">A gentle visual for your day boundary.</p>
+                                    </div>
+                                </div>
+                            </article>
+                        )}
+
+                    </div>
+                </main>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById("root"));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
