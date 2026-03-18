@@ -233,6 +233,7 @@
             const [taskLoading, setTaskLoading] = useState(false);
             const [taskError, setTaskError] = useState("");
             const [tasks, setTasks] = useState([]);
+            const [lastSyncedAt, setLastSyncedAt] = useState("");
             const [breakIdea, setBreakIdea] = useState("Take a short walk outside.");
 
             const [history, setHistory] = useState(() => loadState("pp_history", {}));
@@ -329,7 +330,7 @@
                 setTaskLoading(true);
                 try {
                     const token = settings.todoToken.trim();
-                    const res = await fetch("https://api.todoist.com/rest/v2/tasks", {
+                    const res = await fetch("https://api.todoist.com/rest/v2/tasks?filter=today", {
                         method: "GET",
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -348,6 +349,7 @@
                         ? data.filter((task) => task && task.is_completed !== true)
                         : [];
                     setTasks(incompleteTasks);
+                    setLastSyncedAt(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
                 } catch (err) {
                     const isNetworkError = err && err.name === "TypeError";
                     setTaskError(
@@ -359,6 +361,11 @@
                     setTaskLoading(false);
                 }
             }
+
+            useEffect(() => {
+                if (!settings.todoToken.trim()) return;
+                fetchTasks();
+            }, []);
 
             async function completeTask(taskId) {
                 try {
@@ -578,12 +585,15 @@
                                 <aside className="space-y-4 sm:space-y-5">
                                     <section className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft">
                                         <div className="mb-4 flex items-center justify-between">
-                                            <h2 className="text-lg font-semibold">Todoist Tasks</h2>
+                                            <div>
+                                                <h2 className="text-lg font-semibold">Today Tasks</h2>
+                                                <p className="text-xs text-muted">Todoist window inside Pomodoro</p>
+                                            </div>
                                             <button
                                                 onClick={fetchTasks}
                                                 className="rounded-xl bg-accent px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-110"
                                             >
-                                                Sync
+                                                {taskLoading ? "Syncing..." : "Sync"}
                                             </button>
                                         </div>
 
@@ -597,13 +607,18 @@
                                         />
                                         <p className="mb-3 text-xs text-muted">Tasks are fetched directly from Todoist using the token you enter.</p>
 
+                                        <div className="mb-3 flex items-center justify-between rounded-xl border border-line bg-card px-3 py-2 text-xs">
+                                            <span className="text-muted">{tasks.length} task{tasks.length === 1 ? "" : "s"} due today</span>
+                                            <span className="text-muted">{lastSyncedAt ? `Synced ${lastSyncedAt}` : "Not synced yet"}</span>
+                                        </div>
+
                                         {taskLoading && <p className="text-sm text-muted">Loading tasks...</p>}
                                         {taskError && <p className="text-sm text-red-500">{taskError}</p>}
 
                                         <ul className="max-h-64 space-y-2 overflow-auto pr-1">
                                             {tasks.length === 0 && !taskLoading && (
                                                 <li className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">
-                                                    No tasks loaded yet.
+                                                    No incomplete tasks due today.
                                                 </li>
                                             )}
                                             {tasks.map((task) => (
