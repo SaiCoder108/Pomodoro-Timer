@@ -81,6 +81,10 @@
             font-family: "Manrope", sans-serif;
         }
 
+        html {
+            font-size: 112.5%;
+        }
+
         .surface {
             background:
                 radial-gradient(circle at 15% 10%, rgba(120, 161, 255, 0.16), transparent 35%),
@@ -99,6 +103,100 @@
 
         .fade-in {
             animation: rise 420ms ease both;
+        }
+
+        .lux-loader-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 50;
+            display: grid;
+            place-items: center;
+            background:
+                radial-gradient(circle at 22% 18%, rgba(120, 161, 255, 0.2), transparent 38%),
+                radial-gradient(circle at 80% 16%, rgba(255, 175, 188, 0.22), transparent 40%),
+                radial-gradient(circle at 50% 86%, rgba(125, 188, 145, 0.18), transparent 45%),
+                rgb(var(--bg));
+            transition: opacity 420ms ease, visibility 420ms ease;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .lux-loader-backdrop.is-fading {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .lux-loader-card {
+            width: min(440px, 88vw);
+            border-radius: 1.5rem;
+            border: 1px solid rgb(var(--line));
+            background: rgb(var(--panel) / 0.85);
+            backdrop-filter: blur(14px);
+            padding: 1.3rem 1.4rem;
+            box-shadow: 0 30px 70px -40px rgba(28, 34, 71, 0.55);
+            text-align: center;
+        }
+
+        .lux-loader-ring {
+            width: 3.2rem;
+            height: 3.2rem;
+            margin: 0 auto 0.9rem;
+            border-radius: 999px;
+            border: 3px solid rgb(var(--line));
+            border-top-color: rgb(var(--accent));
+            border-right-color: rgb(var(--accent2));
+            animation: lux-spin 1.1s linear infinite;
+        }
+
+        .lux-shine {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lux-shine::before {
+            content: "";
+            position: absolute;
+            inset: -140% auto -140% -42%;
+            width: 42%;
+            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+            transform: rotate(18deg);
+            animation: lux-shimmer 3.8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes lux-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes lux-shimmer {
+
+            0%,
+            65% {
+                left: -42%;
+            }
+
+            100% {
+                left: 142%;
+            }
+        }
+
+        .blink-colon {
+            animation: colon-blink 1s steps(1, end) infinite;
+        }
+
+        @keyframes colon-blink {
+
+            0%,
+            49% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0.2;
+            }
         }
     </style>
 </head>
@@ -119,6 +217,137 @@
             { label: "45/15", work: 45, rest: 15 },
         ];
 
+        const THEME_PRESETS = [
+            {
+                id: "dark",
+                symbol: "🌙",
+                name: "Dark Mint",
+                colors: {
+                    bg: "21 23 34",
+                    panel: "29 36 43",
+                    card: "35 44 52",
+                    text: "232 244 238",
+                    muted: "165 188 176",
+                    line: "74 99 90",
+                    accent: "121 223 192",
+                    accent2: "153 238 215",
+                    ok: "139 216 165",
+                },
+            },
+            {
+                id: "light",
+                symbol: "☀️",
+                name: "Light Blue",
+                colors: {
+                    bg: "244 247 255",
+                    panel: "255 255 255",
+                    card: "255 255 255",
+                    text: "44 51 76",
+                    muted: "109 118 145",
+                    line: "223 229 247",
+                    accent: "120 161 255",
+                    accent2: "173 201 255",
+                    ok: "125 188 145",
+                },
+            },
+            {
+                id: "heart",
+                symbol: "💗",
+                name: "Heart Pink",
+                colors: {
+                    bg: "255 241 246",
+                    panel: "255 252 253",
+                    card: "255 247 250",
+                    text: "88 47 66",
+                    muted: "145 98 117",
+                    line: "248 205 223",
+                    accent: "242 122 164",
+                    accent2: "255 163 196",
+                    ok: "218 128 172",
+                },
+            },
+            {
+                id: "sunset",
+                symbol: "🌇",
+                name: "Sunset Pastel",
+                colors: {
+                    bg: "255 243 232",
+                    panel: "255 252 247",
+                    card: "255 247 239",
+                    text: "92 59 43",
+                    muted: "154 114 93",
+                    line: "249 214 185",
+                    accent: "245 154 95",
+                    accent2: "255 191 134",
+                    ok: "224 169 116",
+                },
+            },
+            {
+                id: "fjord",
+                symbol: "🌊",
+                name: "Fjord Calm",
+                colors: {
+                    bg: "230 241 247",
+                    panel: "242 250 255",
+                    card: "236 247 253",
+                    text: "38 69 84",
+                    muted: "92 125 143",
+                    line: "189 217 231",
+                    accent: "80 153 182",
+                    accent2: "125 189 214",
+                    ok: "100 171 147",
+                },
+            },
+            {
+                id: "lemonade",
+                symbol: "🍋",
+                name: "Lemonade Pop",
+                colors: {
+                    bg: "255 251 226",
+                    panel: "255 255 242",
+                    card: "255 254 236",
+                    text: "96 74 30",
+                    muted: "155 128 68",
+                    line: "245 229 168",
+                    accent: "245 190 77",
+                    accent2: "255 218 120",
+                    ok: "194 169 101",
+                },
+            },
+            {
+                id: "rosewood",
+                symbol: "🌹",
+                name: "Rosewood Noir",
+                colors: {
+                    bg: "37 24 30",
+                    panel: "52 34 41",
+                    card: "61 40 49",
+                    text: "246 231 236",
+                    muted: "201 168 178",
+                    line: "108 76 88",
+                    accent: "224 126 160",
+                    accent2: "239 165 187",
+                    ok: "196 152 165",
+                },
+            },
+            {
+                id: "sprout",
+                symbol: "🌱",
+                name: "Sprout Day",
+                colors: {
+                    bg: "237 250 234",
+                    panel: "247 255 245",
+                    card: "241 253 238",
+                    text: "44 80 49",
+                    muted: "98 139 101",
+                    line: "194 226 191",
+                    accent: "112 186 108",
+                    accent2: "154 214 142",
+                    ok: "99 168 118",
+                },
+            },
+        ];
+
         const BREAK_IDEAS = [
             "Take a short walk outside.",
             "Do 10 gentle stretches.",
@@ -134,6 +363,16 @@
             "Make tea and sip slowly.",
         ];
 
+        const LOADING_LINES = [
+            "Preparing your focus studio...",
+            "Warming up your focus flow...",
+            "Tuning your calm workspace...",
+            "Arranging today's focus rhythm...",
+            "Setting the mood for deep work...",
+            "Polishing your focus dashboard...",
+            "\"Lock in\" - Harish ;)",
+        ];
+
         function loadState(key, fallback) {
             try {
                 const raw = localStorage.getItem(key);
@@ -146,6 +385,16 @@
 
         function saveState(key, value) {
             localStorage.setItem(key, JSON.stringify(value));
+        }
+
+        function pickLoadingLine() {
+            const lastIdx = loadState("pp_last_loading_line_idx", -1);
+            const pool = LOADING_LINES
+                .map((line, idx) => ({ line, idx }))
+                .filter((item) => item.idx !== lastIdx);
+            const selected = pool[Math.floor(Math.random() * pool.length)] || { line: LOADING_LINES[0], idx: 0 };
+            saveState("pp_last_loading_line_idx", selected.idx);
+            return selected.line;
         }
 
         function formatTime(totalSec) {
@@ -181,6 +430,14 @@
             }).format(date);
         }
 
+        function getClockParts(date) {
+            const hour24 = date.getHours();
+            const hours = ((hour24 % 12) || 12).toString().padStart(2, "0");
+            const minutes = date.getMinutes().toString().padStart(2, "0");
+            const ampm = hour24 >= 12 ? "PM" : "AM";
+            return { hours, minutes, ampm };
+        }
+
         function formatDateKey(date) {
             return date.toISOString().slice(0, 10);
         }
@@ -210,7 +467,14 @@
         }
 
         function App() {
-            const [theme, setTheme] = useState(() => loadState("pp_theme", "light"));
+            const [isBooting, setIsBooting] = useState(true);
+            const [isBootFading, setIsBootFading] = useState(false);
+            const [loadingLine] = useState(() => pickLoadingLine());
+            const [themePresetIndex, setThemePresetIndex] = useState(() => {
+                const savedId = loadState("pp_theme_preset_id", "dark");
+                const savedIndex = THEME_PRESETS.findIndex((preset) => preset.id === savedId);
+                return savedIndex >= 0 ? savedIndex : 0;
+            });
             const [mode, setMode] = useState("pomodoro");
 
             const [settings, setSettings] = useState(() =>
@@ -232,17 +496,30 @@
             const [taskError, setTaskError] = useState("");
             const [taskInput, setTaskInput] = useState("");
             const [tasks, setTasks] = useState(() => loadState("pp_manual_tasks", []));
+            const [showCompleted, setShowCompleted] = useState(false);
             const [breakIdea, setBreakIdea] = useState("Take a short walk outside.");
 
             const [history, setHistory] = useState(() => loadState("pp_history", {}));
 
             const todayKey = formatDateKey(new Date());
             const completedToday = history[todayKey] || 0;
+            const activeTheme = THEME_PRESETS[themePresetIndex] || THEME_PRESETS[0];
 
             useEffect(() => {
-                document.documentElement.classList.toggle("dark", theme === "dark");
-                saveState("pp_theme", theme);
-            }, [theme]);
+                Object.entries(activeTheme.colors).forEach(([token, value]) => {
+                    document.documentElement.style.setProperty(`--${token}`, value);
+                });
+                saveState("pp_theme_preset_id", activeTheme.id);
+            }, [activeTheme]);
+
+            useEffect(() => {
+                const fadeTimer = setTimeout(() => setIsBootFading(true), 1100);
+                const doneTimer = setTimeout(() => setIsBooting(false), 1650);
+                return () => {
+                    clearTimeout(fadeTimer);
+                    clearTimeout(doneTimer);
+                };
+            }, []);
 
             useEffect(() => {
                 saveState("pp_settings", settings);
@@ -265,7 +542,7 @@
             }, []);
 
             useEffect(() => {
-                if (!isRunning || mode !== "pomodoro") return;
+                if (!isRunning) return;
                 const timer = setInterval(() => {
                     setRemainingSec((prev) => {
                         if (prev > 1) return prev - 1;
@@ -291,7 +568,7 @@
                 }, 1000);
 
                 return () => clearInterval(timer);
-            }, [isRunning, phase, settings.workMinutes, settings.restMinutes, settings.autoStartNext, mode]);
+            }, [isRunning, phase, settings.workMinutes, settings.restMinutes, settings.autoStartNext]);
 
             function applyPreset(work, rest) {
                 const safeWork = Math.max(1, Number(work) || 25);
@@ -305,6 +582,10 @@
                     setRemainingSec(safeRest * 60);
                 }
                 setIsRunning(false);
+            }
+
+            function toggleThemeAndCyclePreset() {
+                setThemePresetIndex((prev) => (prev + 1) % THEME_PRESETS.length);
             }
 
             function resetTimer() {
@@ -380,9 +661,22 @@
 
             const maxDay = Math.max(1, ...recentDays.map((d) => d.count));
             const progress = durationSec === 0 ? 0 : (durationSec - remainingSec) / durationSec;
+            const activeTasks = tasks.filter((task) => !task.done);
+            const completedTasks = tasks.filter((task) => task.done);
 
             return (
-                <main className="relative min-h-screen px-4 py-6 sm:px-8 sm:py-10">
+                <main className="relative min-h-screen px-4 py-6 pb-20 sm:px-8 sm:py-10 sm:pb-24">
+                    {isBooting && (
+                        <div className={`lux-loader-backdrop ${isBootFading ? "is-fading" : ""}`}>
+                            <div className="lux-loader-card">
+                                <div className="lux-loader-ring" aria-hidden="true" />
+                                <p className="font-serif text-2xl">Pastel Pomodoro</p>
+                                <p className="mt-2 text-sm text-muted">{loadingLine}</p>
+                                <p className="mt-2 text-lg" aria-hidden="true">{activeTheme.symbol}</p>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
                         <div className="absolute -left-8 top-20 h-40 w-40 rounded-full bg-accent/30 blur-2xl animate-drift" />
                         <div className="absolute right-2 top-1/3 h-44 w-44 rounded-full bg-accent2/35 blur-2xl animate-drift" />
@@ -390,7 +684,7 @@
                     </div>
 
                     <div className="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
-                        <header className="glass grid grid-cols-1 items-center gap-3 rounded-3xl border border-line/70 bg-panel/80 p-4 shadow-soft sm:grid-cols-[1fr_auto_1fr] sm:p-6">
+                        <header className="fade-in glass grid grid-cols-1 items-center gap-3 rounded-3xl border border-line/70 bg-panel/80 p-4 shadow-soft sm:grid-cols-[1fr_auto_1fr] sm:p-6" style={{ animationDelay: "80ms" }}>
                             <div className="text-center sm:text-left">
                                 <p className="font-serif text-2xl leading-tight sm:text-3xl">Pastel Pomodoro</p>
                                 <p className="text-sm text-muted">focus, breathe, and flow</p>
@@ -412,28 +706,12 @@
                             </div>
 
                             <button
-                                onClick={() => setTheme((t) => (t === "light" ? "dark" : "light"))}
-                                aria-label={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                                title={theme === "light" ? "Switch to dark mode" : "Switch to light mode"}
-                                className="mx-auto grid h-11 w-11 place-items-center rounded-xl border border-line bg-card text-text transition hover:scale-[1.03] sm:mx-0 sm:justify-self-end"
+                                onClick={toggleThemeAndCyclePreset}
+                                aria-label={`Theme: ${activeTheme.name}. Click for next theme.`}
+                                title={`Theme: ${activeTheme.name}. Click for next theme.`}
+                                className="lux-shine mx-auto grid h-11 w-11 place-items-center rounded-xl border border-line bg-card text-text transition hover:scale-[1.03] sm:mx-0 sm:justify-self-end"
                             >
-                                {theme === "light" ? (
-                                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <path d="M21 12.79A9 9 0 1 1 11.21 3c0 0-1.21 5.79 3 9s9.79 3 9.79 3.79z" />
-                                    </svg>
-                                ) : (
-                                    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                                        <circle cx="12" cy="12" r="4" />
-                                        <path d="M12 2v2" />
-                                        <path d="M12 20v2" />
-                                        <path d="m4.93 4.93 1.41 1.41" />
-                                        <path d="m17.66 17.66 1.41 1.41" />
-                                        <path d="M2 12h2" />
-                                        <path d="M20 12h2" />
-                                        <path d="m6.34 17.66-1.41 1.41" />
-                                        <path d="m19.07 4.93-1.41 1.41" />
-                                    </svg>
-                                )}
+                                <span className="text-lg leading-none" aria-hidden="true">{activeTheme.symbol}</span>
                             </button>
                         </header>
 
@@ -500,7 +778,7 @@
                                         <div className="flex flex-wrap justify-center gap-2">
                                             <button
                                                 onClick={() => setIsRunning((r) => !r)}
-                                                className="rounded-xl bg-accent px-5 py-2.5 font-semibold text-white transition hover:brightness-110"
+                                                className="lux-shine rounded-xl bg-accent px-5 py-2.5 font-semibold text-white transition hover:brightness-110"
                                             >
                                                 {isRunning ? "Pause" : "Start"}
                                             </button>
@@ -546,45 +824,38 @@
                                     <section className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft">
                                         <div className="mb-4 flex items-center justify-between">
                                             <div>
-                                                <h2 className="text-lg font-semibold">Task Import</h2>
-                                                <p className="text-xs text-muted">Paste a list to auto-create tasks</p>
+                                                <h2 className="text-lg font-semibold">Tasks</h2>
+                                                <p className="text-xs text-muted">Your focus list (add more in More Controls)</p>
                                             </div>
-                                            <button
-                                                onClick={importTasksFromText}
-                                                className="rounded-xl bg-accent px-3 py-1.5 text-sm font-semibold text-white transition hover:brightness-110"
-                                            >
-                                                Import
-                                            </button>
                                         </div>
 
-                                        <label className="mb-2 block text-sm text-muted">Paste Tasks</label>
-                                        <textarea
-                                            value={taskInput}
-                                            onChange={(e) => setTaskInput(e.target.value)}
-                                            placeholder={"Example:\n- Finish report\n- Send update\n- Read chapter 4"}
-                                            className="mb-3 min-h-[110px] w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
-                                        />
-                                        <p className="mb-3 text-xs text-muted">One line becomes one task. Bullets and numbering are auto-cleaned.</p>
-
                                         <div className="mb-3 flex items-center justify-between rounded-xl border border-line bg-card px-3 py-2 text-xs">
-                                            <span className="text-muted">{tasks.length} task{tasks.length === 1 ? "" : "s"} total</span>
-                                            <button
-                                                onClick={clearCompletedTasks}
-                                                className="rounded-md border border-line px-2 py-1 font-semibold text-muted transition hover:bg-bg"
-                                            >
-                                                Clear done
-                                            </button>
+                                            <span className="text-muted">{activeTasks.length} open, {completedTasks.length} completed</span>
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setShowCompleted((v) => !v)}
+                                                    className="rounded-md border border-line px-2 py-1 font-semibold text-muted transition hover:bg-bg"
+                                                >
+                                                    {showCompleted ? "Hide Completed" : "Completed"}
+                                                </button>
+                                                <button
+                                                    onClick={clearCompletedTasks}
+                                                    className="rounded-md border border-line px-2 py-1 font-semibold text-muted transition hover:bg-bg"
+                                                >
+                                                    Clear done
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {taskError && <p className="text-sm text-red-500">{taskError}</p>}
 
-                                        <ul className="max-h-64 space-y-2 overflow-auto pr-1">
-                                            {tasks.length === 0 && (
+                                        <ul className="max-h-72 space-y-2 overflow-auto pr-1">
+                                            {activeTasks.length === 0 && (
                                                 <li className="rounded-xl border border-dashed border-line p-3 text-sm text-muted">
-                                                    No tasks yet. Paste a list and click Import.
+                                                    No open tasks. Add tasks from More Controls.
                                                 </li>
                                             )}
-                                            {tasks.map((task) => (
+                                            {activeTasks.map((task) => (
                                                 <li key={task.id} className="flex items-start justify-between gap-2 rounded-xl border border-line bg-card p-3">
                                                     <div>
                                                         <p className={`text-sm font-medium ${task.done ? "text-muted line-through" : ""}`}>{task.content}</p>
@@ -593,17 +864,41 @@
                                                         onClick={() => toggleTaskDone(task.id)}
                                                         className="rounded-lg border border-line px-2 py-1 text-xs font-semibold transition hover:bg-bg"
                                                     >
-                                                        {task.done ? "Undo" : "Done"}
+                                                        Done
                                                     </button>
                                                 </li>
                                             ))}
                                         </ul>
+
+                                        {showCompleted && (
+                                            <div className="mt-4 rounded-xl border border-line bg-card p-3">
+                                                <p className="mb-2 text-sm font-semibold">Completed</p>
+                                                <ul className="max-h-40 space-y-2 overflow-auto pr-1">
+                                                    {completedTasks.length === 0 && (
+                                                        <li className="rounded-lg border border-dashed border-line p-2 text-xs text-muted">
+                                                            No completed tasks yet.
+                                                        </li>
+                                                    )}
+                                                    {completedTasks.map((task) => (
+                                                        <li key={task.id} className="flex items-start justify-between gap-2 rounded-lg border border-line p-2">
+                                                            <p className="text-sm font-medium text-muted line-through">{task.content}</p>
+                                                            <button
+                                                                onClick={() => toggleTaskDone(task.id)}
+                                                                className="rounded-md border border-line px-2 py-1 text-xs font-semibold text-muted transition hover:bg-bg"
+                                                            >
+                                                                Undo
+                                                            </button>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
                                     </section>
 
-                                    <details className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft">
+                                    <details className="glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft" style={{ maxHeight: "72vh" }}>
                                         <summary className="cursor-pointer list-none text-lg font-semibold">More Controls</summary>
 
-                                        <div className="mt-4 space-y-5">
+                                        <div className="mt-4 space-y-5 overflow-y-auto pr-1" style={{ maxHeight: "calc(72vh - 56px)" }}>
                                             <section>
                                                 <div className="mb-4 flex items-center justify-between">
                                                     <h2 className="text-base font-semibold">Settings</h2>
@@ -654,6 +949,25 @@
                                                         />
                                                         Auto-start next session
                                                     </label>
+
+                                                    <div className="mt-5 rounded-xl border border-line bg-card p-3">
+                                                        <p className="mb-2 text-sm font-semibold">Add From Paste</p>
+                                                        <textarea
+                                                            value={taskInput}
+                                                            onChange={(e) => setTaskInput(e.target.value)}
+                                                            placeholder={"Example:\n- Finish report\n- Send update\n- Read chapter 4"}
+                                                            className="mb-3 min-h-[100px] w-full rounded-xl border border-line bg-panel px-3 py-2 outline-none transition focus:border-accent"
+                                                        />
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <p className="text-xs text-muted">One line becomes one task.</p>
+                                                            <button
+                                                                onClick={importTasksFromText}
+                                                                className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-white transition hover:brightness-110"
+                                                            >
+                                                                Import
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </section>
                                         </div>
@@ -694,7 +1008,10 @@
                                 <div className="grid min-h-[420px] place-items-center text-center">
                                     <div className="space-y-4">
                                         <p className="text-sm uppercase tracking-widest text-muted">Live Clock Mode</p>
-                                        <p className="font-serif text-5xl sm:text-7xl">{formatClock(clockNow)}</p>
+                                        <p className="mx-auto w-fit text-center font-serif tabular-nums text-5xl sm:text-7xl">
+                                            {getClockParts(clockNow).hours}:{getClockParts(clockNow).minutes}
+                                            <span className="ml-2 align-middle text-2xl text-muted sm:text-3xl">{getClockParts(clockNow).ampm}</span>
+                                        </p>
                                         <p className="text-muted">{clockNow.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}</p>
                                     </div>
                                 </div>
@@ -713,7 +1030,7 @@
                                                 style={{ width: `${((86400 - untilMidnightSec) / 86400) * 100}%` }}
                                             />
                                         </div>
-                                        <p className="text-sm text-muted">A gentle visual for your day boundary.</p>
+                                        <p className="text-sm text-muted">Make today count.</p>
                                     </div>
                                 </div>
                             </article>
