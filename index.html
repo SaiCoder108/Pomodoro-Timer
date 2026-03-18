@@ -150,37 +150,9 @@
             animation: lux-spin 1.1s linear infinite;
         }
 
-        .lux-shine {
-            position: relative;
-            overflow: hidden;
-        }
-
-        .lux-shine::before {
-            content: "";
-            position: absolute;
-            inset: -140% auto -140% -42%;
-            width: 42%;
-            background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.32), transparent);
-            transform: rotate(18deg);
-            animation: lux-shimmer 3.8s ease-in-out infinite;
-            pointer-events: none;
-        }
-
         @keyframes lux-spin {
             to {
                 transform: rotate(360deg);
-            }
-        }
-
-        @keyframes lux-shimmer {
-
-            0%,
-            65% {
-                left: -42%;
-            }
-
-            100% {
-                left: 142%;
             }
         }
 
@@ -737,7 +709,7 @@
                                 onClick={toggleThemeAndCyclePreset}
                                 aria-label={`Theme: ${activeTheme.name}. Click for next theme.`}
                                 title={`Theme: ${activeTheme.name}. Click for next theme.`}
-                                className="lux-shine mx-auto grid h-11 w-11 place-items-center rounded-xl border border-line bg-card text-text transition hover:scale-[1.03] sm:mx-0 sm:justify-self-end"
+                                className="mx-auto grid h-11 w-11 place-items-center rounded-xl border border-line bg-card text-text transition hover:scale-[1.03] sm:mx-0 sm:justify-self-end"
                             >
                                 <span className="text-lg leading-none" aria-hidden="true">{activeTheme.symbol}</span>
                             </button>
@@ -806,7 +778,7 @@
                                         <div className="flex flex-wrap justify-center gap-2">
                                             <button
                                                 onClick={() => setIsRunning((r) => !r)}
-                                                className="lux-shine rounded-xl bg-accent px-5 py-2.5 font-semibold text-white transition hover:brightness-110"
+                                                className="rounded-xl bg-accent px-5 py-2.5 font-semibold text-white transition hover:brightness-110"
                                             >
                                                 {isRunning ? "Pause" : "Start"}
                                             </button>
