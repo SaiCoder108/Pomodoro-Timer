@@ -319,26 +319,42 @@
             }
 
             async function fetchTasks() {
+                if (!settings.todoToken.trim()) {
+                    setTaskError("Please enter your Todoist API token.");
+                    setTasks([]);
+                    return;
+                }
+
                 setTaskError("");
                 setTaskLoading(true);
                 try {
                     const token = settings.todoToken.trim();
-                    const res = await fetch("/api/todoist/tasks", {
+                    const res = await fetch("https://api.todoist.com/rest/v2/tasks", {
                         method: "GET",
                         headers: {
-                            ...(token ? { "x-todoist-token": token } : {}),
+                            Authorization: `Bearer ${token}`,
                         },
                     });
 
                     if (!res.ok) {
-                        const errData = await res.json().catch(() => ({}));
-                        throw new Error(errData.error || `Todoist request failed (${res.status}).`);
+                        if (res.status === 401 || res.status === 403) {
+                            throw new Error("Invalid Todoist token. Please check and try again.");
+                        }
+                        throw new Error(`Todoist request failed (${res.status}).`);
                     }
 
                     const data = await res.json();
-                    setTasks(data);
+                    const incompleteTasks = Array.isArray(data)
+                        ? data.filter((task) => task && task.is_completed !== true)
+                        : [];
+                    setTasks(incompleteTasks);
                 } catch (err) {
-                    setTaskError(err.message || "Could not load tasks via Vercel API.");
+                    const isNetworkError = err && err.name === "TypeError";
+                    setTaskError(
+                        isNetworkError
+                            ? "Network error. Could not reach Todoist API from your browser."
+                            : (err.message || "Could not load tasks.")
+                    );
                 } finally {
                     setTaskLoading(false);
                 }
@@ -347,23 +363,33 @@
             async function completeTask(taskId) {
                 try {
                     const token = settings.todoToken.trim();
-                    const res = await fetch("/api/todoist/close", {
+                    if (!token) {
+                        setTaskError("Please enter your Todoist API token.");
+                        return;
+                    }
+
+                    const res = await fetch(`https://api.todoist.com/rest/v2/tasks/${taskId}/close`, {
                         method: "POST",
                         headers: {
-                            "Content-Type": "application/json",
-                            ...(token ? { "x-todoist-token": token } : {}),
+                            Authorization: `Bearer ${token}`,
                         },
-                        body: JSON.stringify({ taskId }),
                     });
 
                     if (!res.ok) {
-                        const errData = await res.json().catch(() => ({}));
-                        throw new Error(errData.error || `Close failed (${res.status}).`);
+                        if (res.status === 401 || res.status === 403) {
+                            throw new Error("Invalid Todoist token. Could not complete task.");
+                        }
+                        throw new Error(`Close failed (${res.status}).`);
                     }
 
                     setTasks((prev) => prev.filter((t) => t.id !== taskId));
                 } catch (err) {
-                    setTaskError(err.message || "Could not close task.");
+                    const isNetworkError = err && err.name === "TypeError";
+                    setTaskError(
+                        isNetworkError
+                            ? "Network error while completing the task."
+                            : (err.message || "Could not close task.")
+                    );
                 }
             }
 
@@ -561,15 +587,15 @@
                                             </button>
                                         </div>
 
-                                        <label className="mb-2 block text-sm text-muted">Todoist API Token (optional override)</label>
+                                        <label className="mb-2 block text-sm text-muted">Todoist API Token</label>
                                         <input
                                             type="password"
                                             value={settings.todoToken}
                                             onChange={(e) => setSettings((s) => ({ ...s, todoToken: e.target.value }))}
-                                            placeholder="Leave empty to use Vercel env token"
+                                            placeholder="Paste your Todoist token"
                                             className="mb-3 w-full rounded-xl border border-line bg-card px-3 py-2 outline-none transition focus:border-accent"
                                         />
-                                        <p className="mb-3 text-xs text-muted">Recommended: set TODOIST_API_TOKEN in Vercel Project Settings and leave this field empty.</p>
+                                        <p className="mb-3 text-xs text-muted">Tasks are fetched directly from Todoist using the token you enter.</p>
 
                                         {taskLoading && <p className="text-sm text-muted">Loading tasks...</p>}
                                         {taskError && <p className="text-sm text-red-500">{taskError}</p>}
