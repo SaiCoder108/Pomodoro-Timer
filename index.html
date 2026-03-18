@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full">
+<!-- Cool website eh? -->
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Pastel Pomodoro</title>
+    <link id="theme-favicon" rel="icon" type="image/svg+xml" href="" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -387,6 +389,31 @@
             localStorage.setItem(key, JSON.stringify(value));
         }
 
+        function updateThemeFavicon(symbol, colors) {
+            const icon = document.getElementById("theme-favicon");
+            if (!icon) return;
+
+            const bg = `rgb(${colors.bg})`;
+            const accent = `rgb(${colors.accent})`;
+            const accent2 = `rgb(${colors.accent2})`;
+
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+                    <defs>
+                        <linearGradient id="themeFaviconGradient" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="${accent}" />
+                            <stop offset="100%" stop-color="${accent2}" />
+                        </linearGradient>
+                    </defs>
+                    <rect width="64" height="64" rx="16" fill="${bg}" />
+                    <rect x="5" y="5" width="54" height="54" rx="14" fill="url(#themeFaviconGradient)" opacity="0.95" />
+                    <text x="32" y="35" font-size="28" text-anchor="middle" dominant-baseline="middle">${symbol}</text>
+                </svg>
+            `;
+
+            icon.setAttribute("href", `data:image/svg+xml,${encodeURIComponent(svg)}`);
+        }
+
         function pickLoadingLine() {
             const lastIdx = loadState("pp_last_loading_line_idx", -1);
             const pool = LOADING_LINES
@@ -509,6 +536,7 @@
                 Object.entries(activeTheme.colors).forEach(([token, value]) => {
                     document.documentElement.style.setProperty(`--${token}`, value);
                 });
+                updateThemeFavicon(activeTheme.symbol, activeTheme.colors);
                 saveState("pp_theme_preset_id", activeTheme.id);
             }, [activeTheme]);
 
