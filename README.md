@@ -1,43 +1,100 @@
-# Pastel Pomodoro Timer
+# Pastel Pomodoro
 
-A modern, minimal Pomodoro timer web app built with React (CDN), TailwindCSS (CDN), and smooth CSS transitions.
+A premium-feel focus timer built for deep work.
 
-## Features
+No install. No build. Just open and lock in.
 
-- Pomodoro timer with presets: 25/5, 50/10, 45/15
-- Manual session duration settings
-- Circular animated progress UI
-- Live clock mode
-- Countdown to midnight mode
-- Todoist integration (fetch tasks and mark complete)
-- Daily Pomodoro completion tracker (last 7 days)
-- Local persistence for settings, theme, and progress history
-- Light/dark theme toggle
-- Auto-start next session option
-- Subtle audio cue on session transitions
-- Responsive layout
+## Why This App Hits Different
 
-## Run
+Pastel Pomodoro blends productivity with atmosphere: smooth motion, rich theme swaps, focused task flow, and a clean timer experience that stays out of your way.
 
-No build step is required.
+It is designed to feel intentional at every touchpoint, from the animated load screen to the circular timer and weekly streak view.
 
-1. Open `index.html` in a browser.
-2. For Todoist, add your API token in Settings, then click Sync.
+## Core Features
 
-## Notes
+### Focus Timer Engine
 
-- Data is stored in localStorage under keys prefixed with `pp_`.
-- Since this environment does not have Node.js/npm installed, the app is provided as a zero-build React implementation.
+- Pomodoro presets: 25/5, 50/10, 45/15
+- Start, pause, reset, skip controls
+- Circular animated progress ring
+- Work/break phase switching with optional auto-start
+- Soft transition sound cue between phases
+- Timer continues running even when you switch tabs inside the app
 
-## Todoist On Vercel
+### Built-In Task Workflow
 
-If you deploy to Vercel, set this environment variable in your project settings:
+- Paste tasks in bulk from More Controls
+- Automatic line-to-task parsing
+- Mark tasks done/undo in one tap
+- Completed tasks section with quick clear action
+- Local task persistence
 
-- `TODOIST_API_TOKEN` = your Todoist API token
+### Multi-Mode Dashboard
 
-This project includes serverless endpoints:
+- Pomodoro Mode: immersive timer + controls + task panel
+- Live Clock Mode: centered 12-hour clock with AM/PM
+- Next Day Mode: countdown to midnight with progress bar
+- Progress Mode: weekly session streak view (Sun to Sat)
 
-- `/api/todoist/tasks`
-- `/api/todoist/close`
+### Theme System
 
-The frontend calls these endpoints to avoid browser CORS issues with direct Todoist requests.
+- One-tap theme cycling from the top-right emoji button
+- Full palette swaps (not just accent recolors)
+- Theme-matched dynamic tab icon (favicon)
+- Distinct visual identities, including:
+	- Dark Mint
+	- Light Blue
+	- Heart Pink
+	- Sunset Pastel
+	- Plus additional creative palettes
+
+### Luxury UI Details
+
+- Delayed animated loading intro
+- Rotating loading messages with easter-egg lines
+- Glassmorphism cards, drifting ambient blobs, smooth transitions
+- Responsive layout optimized for desktop and mobile
+
+## Persistence
+
+Everything important is saved locally using browser localStorage, including:
+
+- Theme selection
+- Timer settings
+- Session history
+- Tasks
+- Loader message rotation state
+
+## Stack
+
+- React 18 (UMD via CDN)
+- TailwindCSS (CDN)
+- Babel Standalone (browser transpile)
+- Single-file app architecture in index.html
+
+## Run Locally
+
+No dependency install required.
+
+1. Open index.html in your browser.
+2. Start a session and lock in.
+
+## Project Structure
+
+- index.html: full app (UI, logic, styles)
+- README.md: project overview
+- api/: legacy backend experimentation (not required for current local app flow)
+
+## Best Use Flow
+
+1. Pick your preferred visual theme (emoji button).
+2. Choose a timer preset.
+3. Paste your task list in More Controls.
+4. Run focused cycles.
+5. Track your consistency in Progress mode.
+
+## Vision
+
+This project is built around one idea:
+
+Make focus feel good enough to come back to every day.
