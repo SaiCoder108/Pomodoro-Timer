@@ -28,3 +28,16 @@ No build step is required.
 
 - Data is stored in localStorage under keys prefixed with `pp_`.
 - Since this environment does not have Node.js/npm installed, the app is provided as a zero-build React implementation.
+
+## Todoist On Vercel
+
+If you deploy to Vercel, set this environment variable in your project settings:
+
+- `TODOIST_API_TOKEN` = your Todoist API token
+
+This project includes serverless endpoints:
+
+- `/api/todoist/tasks`
+- `/api/todoist/close`
+
+The frontend calls these endpoints to avoid browser CORS issues with direct Todoist requests.
