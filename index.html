@@ -195,22 +195,6 @@
 
         const THEME_PRESETS = [
             {
-                id: "dark",
-                symbol: "🌙",
-                name: "Dark Mint",
-                colors: {
-                    bg: "21 23 34",
-                    panel: "29 36 43",
-                    card: "35 44 52",
-                    text: "232 244 238",
-                    muted: "165 188 176",
-                    line: "74 99 90",
-                    accent: "121 223 192",
-                    accent2: "153 238 215",
-                    ok: "139 216 165",
-                },
-            },
-            {
                 id: "light",
                 symbol: "☀️",
                 name: "Light Blue",
@@ -291,6 +275,70 @@
                 },
             },
             {
+                id: "sprout",
+                symbol: "🌱",
+                name: "Sprout Day",
+                colors: {
+                    bg: "237 250 234",
+                    panel: "247 255 245",
+                    card: "241 253 238",
+                    text: "44 80 49",
+                    muted: "98 139 101",
+                    line: "194 226 191",
+                    accent: "112 186 108",
+                    accent2: "154 214 142",
+                    ok: "99 168 118",
+                },
+            },
+            {
+                id: "starlight",
+                symbol: "⭐",
+                name: "Starlight Cream",
+                colors: {
+                    bg: "249 246 233",
+                    panel: "255 253 243",
+                    card: "255 249 234",
+                    text: "76 61 34",
+                    muted: "132 113 79",
+                    line: "233 220 173",
+                    accent: "223 170 74",
+                    accent2: "245 201 120",
+                    ok: "170 156 99",
+                },
+            },
+            {
+                id: "lavender-dusk",
+                symbol: "🪻",
+                name: "Lavender Dusk",
+                colors: {
+                    bg: "240 237 252",
+                    panel: "249 247 255",
+                    card: "244 241 255",
+                    text: "63 55 95",
+                    muted: "114 105 153",
+                    line: "212 205 241",
+                    accent: "136 115 218",
+                    accent2: "176 157 236",
+                    ok: "132 160 141",
+                },
+            },
+            {
+                id: "dark",
+                symbol: "🌙",
+                name: "Dark Mint",
+                colors: {
+                    bg: "21 23 34",
+                    panel: "29 36 43",
+                    card: "35 44 52",
+                    text: "232 244 238",
+                    muted: "165 188 176",
+                    line: "74 99 90",
+                    accent: "121 223 192",
+                    accent2: "153 238 215",
+                    ok: "139 216 165",
+                },
+            },
+            {
                 id: "rosewood",
                 symbol: "🌹",
                 name: "Rosewood Noir",
@@ -307,19 +355,83 @@
                 },
             },
             {
-                id: "sprout",
-                symbol: "🌱",
-                name: "Sprout Day",
+                id: "midnight",
+                symbol: "🌌",
+                name: "Midnight Indigo",
                 colors: {
-                    bg: "237 250 234",
-                    panel: "247 255 245",
-                    card: "241 253 238",
-                    text: "44 80 49",
-                    muted: "98 139 101",
-                    line: "194 226 191",
-                    accent: "112 186 108",
-                    accent2: "154 214 142",
-                    ok: "99 168 118",
+                    bg: "16 20 37",
+                    panel: "24 30 54",
+                    card: "30 38 66",
+                    text: "233 239 255",
+                    muted: "163 176 212",
+                    line: "70 83 124",
+                    accent: "111 152 255",
+                    accent2: "162 189 255",
+                    ok: "126 198 182",
+                },
+            },
+            {
+                id: "onyx",
+                symbol: "🖤",
+                name: "Onyx Slate",
+                colors: {
+                    bg: "19 21 27",
+                    panel: "29 32 41",
+                    card: "35 39 50",
+                    text: "236 241 249",
+                    muted: "166 176 194",
+                    line: "73 80 99",
+                    accent: "130 169 241",
+                    accent2: "173 199 247",
+                    ok: "145 193 167",
+                },
+            },
+            {
+                id: "ember-night",
+                symbol: "🔥",
+                name: "Ember Night",
+                colors: {
+                    bg: "34 21 22",
+                    panel: "48 30 31",
+                    card: "57 36 38",
+                    text: "249 233 229",
+                    muted: "209 170 161",
+                    line: "110 76 72",
+                    accent: "235 133 102",
+                    accent2: "249 176 136",
+                    ok: "214 170 120",
+                },
+            },
+            {
+                id: "forest-night",
+                symbol: "🌲",
+                name: "Forest Night",
+                colors: {
+                    bg: "18 29 24",
+                    panel: "27 42 35",
+                    card: "33 50 41",
+                    text: "229 245 236",
+                    muted: "157 191 171",
+                    line: "69 102 85",
+                    accent: "106 198 149",
+                    accent2: "145 221 180",
+                    ok: "130 210 150",
+                },
+            },
+            {
+                id: "ice-night",
+                symbol: "❄️",
+                name: "Ice Night",
+                colors: {
+                    bg: "13 24 34",
+                    panel: "21 37 50",
+                    card: "26 44 59",
+                    text: "225 243 252",
+                    muted: "150 186 202",
+                    line: "59 90 111",
+                    accent: "98 179 212",
+                    accent2: "145 214 240",
+                    ok: "124 196 180",
                 },
             },
         ];
@@ -1010,6 +1122,32 @@
                                         <summary className="cursor-pointer list-none text-lg font-semibold">More Controls</summary>
 
                                         <div className="mt-4 space-y-5 overflow-y-auto pr-1" style={{ maxHeight: "calc(72vh - 56px)" }}>
+                                            <section>
+                                                <div className="mb-4 flex items-center justify-between">
+                                                    <h2 className="text-base font-semibold">Theme Variants</h2>
+                                                    <span className="text-xs text-muted">{themePresetIndex + 1}/{THEME_PRESETS.length}</span>
+                                                </div>
+
+                                                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                                                    {THEME_PRESETS.map((preset, idx) => {
+                                                        const selected = idx === themePresetIndex;
+                                                        return (
+                                                            <button
+                                                                key={preset.id}
+                                                                onClick={() => setThemePresetIndex(idx)}
+                                                                className={`rounded-xl border px-3 py-2 text-left transition ${selected
+                                                                    ? "border-accent bg-accent/10"
+                                                                    : "border-line bg-card hover:bg-bg"
+                                                                    }`}
+                                                            >
+                                                                <p className="text-xs text-muted">{preset.symbol}</p>
+                                                                <p className="mt-0.5 text-xs font-semibold leading-tight">{preset.name}</p>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </section>
+
                                             <section>
                                                 <div className="mb-4 flex items-center justify-between">
                                                     <h2 className="text-base font-semibold">Settings</h2>
