@@ -86,7 +86,7 @@
         }
 
         html {
-            font-size: 112.5%;
+            font-size: clamp(93.75%, 0.5vw + 88%, 112.5%);
         }
 
         .surface {
@@ -907,13 +907,13 @@
                     </div>
 
                     <div className="mx-auto w-full max-w-6xl space-y-4 sm:space-y-6">
-                        <header className="fade-in glass grid grid-cols-1 items-center gap-3 rounded-3xl border border-line/70 bg-panel/80 p-4 shadow-soft sm:grid-cols-[1fr_auto_1fr] sm:p-6" style={{ animationDelay: "80ms" }}>
-                            <div className="text-center sm:text-left">
+                        <header className="fade-in glass grid grid-cols-1 items-center gap-3 rounded-3xl border border-line/70 bg-panel/80 p-4 shadow-soft md:grid-cols-[1fr_auto_1fr] sm:p-6" style={{ animationDelay: "80ms" }}>
+                            <div className="text-center md:text-left">
                                 <p className="font-serif text-2xl leading-tight sm:text-3xl">Pastel Pomodoro</p>
                                 <p className="text-sm text-muted">focus, breathe, and flow</p>
                             </div>
 
-                            <div className="mx-auto flex w-fit items-center gap-2 rounded-2xl border border-line bg-card p-1 sm:mx-0 sm:justify-self-center">
+                            <div className="mx-auto flex w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-line bg-card p-1 md:mx-0 md:w-fit md:flex-nowrap md:justify-self-center">
                                 {["pomodoro", "clock", "midnight", "progress"].map((m) => (
                                     <button
                                         key={m}
@@ -955,7 +955,7 @@
                                         </div>
 
                                         <div className="mx-auto grid max-w-lg place-items-center">
-                                            <div className="relative h-72 w-72 sm:h-80 sm:w-80">
+                                            <div className="relative aspect-square w-[min(78vw,20rem)] sm:w-80">
                                                 <svg viewBox="0 0 180 180" className="h-full w-full -rotate-90">
                                                     <circle cx="90" cy="90" r="72" stroke="currentColor" strokeWidth="12" className="text-line" fill="none" />
                                                     <circle
@@ -979,7 +979,7 @@
                                                 </svg>
                                                 <div className="absolute inset-0 flex items-center justify-center text-center">
                                                     <div>
-                                                        <p className="text-5xl font-semibold tracking-tight sm:text-6xl">{formatTime(remainingSec)}</p>
+                                                        <p className="text-4xl font-semibold tracking-tight sm:text-6xl">{formatTime(remainingSec)}</p>
                                                         <p className="mt-2 text-sm text-muted">{phase === "work" ? "Stay centered" : "Reset and breathe"}</p>
                                                     </div>
                                                 </div>
@@ -1254,10 +1254,10 @@
 
                         {mode === "clock" && (
                             <article className="fade-in glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft sm:p-7">
-                                <div className="grid min-h-[420px] place-items-center text-center">
+                                <div className="grid min-h-[320px] sm:min-h-[420px] place-items-center text-center">
                                     <div className="space-y-4">
                                         <p className="text-sm uppercase tracking-widest text-muted">Live Clock Mode</p>
-                                        <p className="mx-auto w-fit text-center font-serif tabular-nums text-5xl sm:text-7xl">
+                                        <p className="mx-auto w-fit text-center font-serif tabular-nums text-4xl sm:text-7xl">
                                             {getClockParts(clockNow).hours}:{getClockParts(clockNow).minutes}
                                             <span className="ml-2 align-middle text-2xl text-muted sm:text-3xl">{getClockParts(clockNow).ampm}</span>
                                         </p>
@@ -1270,7 +1270,7 @@
                         {mode === "midnight" && (
                             <article className="fade-in glass rounded-3xl border border-line bg-panel/85 p-5 shadow-soft sm:p-7">
                                 {isCountdownEditing ? (
-                                    <div className="grid min-h-[420px] gap-6 lg:grid-cols-[1.1fr_1fr]">
+                                    <div className="grid min-h-[320px] gap-6 sm:min-h-[420px] lg:grid-cols-[1.1fr_1fr]">
                                         <div className="rounded-2xl border border-line bg-card p-4 sm:p-5">
                                             <p className="text-sm uppercase tracking-widest text-muted">Pick Today&#39;s Target Time</p>
                                             <p className="mt-1 text-sm text-muted">Drag the hour hand (pink) and minute hand (blue), then start.</p>
@@ -1279,7 +1279,7 @@
                                                 <svg
                                                     ref={analogClockRef}
                                                     viewBox="0 0 240 240"
-                                                    className="h-64 w-64 touch-none select-none"
+                                                    className="aspect-square w-[min(78vw,16rem)] touch-none select-none sm:w-64"
                                                     onPointerMove={(e) => {
                                                         if (!activeCountdownHand) return;
                                                         updateClockHandFromPointer(e, activeCountdownHand);
@@ -1373,7 +1373,7 @@
                                         <div className="grid place-items-center text-center">
                                             <div className="w-full max-w-lg space-y-6">
                                                 <p className="text-sm uppercase tracking-widest text-muted">Custom Countdown</p>
-                                                <p className="font-serif text-5xl sm:text-7xl">{countdownDisplayTime}</p>
+                                                <p className="font-serif text-4xl sm:text-7xl">{countdownDisplayTime}</p>
                                                 <div className="h-3 overflow-hidden rounded-full bg-line">
                                                     <div
                                                         className="h-full rounded-full bg-gradient-to-r from-accent to-accent2 transition-all duration-1000"
@@ -1408,10 +1408,10 @@
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="grid min-h-[420px] place-items-center text-center">
+                                    <div className="grid min-h-[320px] sm:min-h-[420px] place-items-center text-center">
                                         <div className="w-full max-w-xl space-y-6">
                                             <p className="text-sm uppercase tracking-widest text-muted">Custom Countdown</p>
-                                            <p className="font-serif text-6xl sm:text-8xl">{countdownDisplayTime}</p>
+                                            <p className="font-serif text-4xl sm:text-8xl">{countdownDisplayTime}</p>
                                             <div className="h-3 overflow-hidden rounded-full bg-line">
                                                 <div
                                                     className="h-full rounded-full bg-gradient-to-r from-accent to-accent2 transition-all duration-1000"
